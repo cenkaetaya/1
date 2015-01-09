@@ -72,15 +72,15 @@ tft.setCursor(0,0);
   tft.setTextColor(ST7735_YELLOW);
   tft.print("Temperature (C): ");
   tft.setTextColor(ST7735_GREEN);
- ////// tft.println((float)DHT22.temperature,1);
+ ////// tft.println((float)DHT22.temperature,1);      //EDIT TEMP DISPLAY DATA HERE
   tft.setTextColor(ST7735_WHITE);
   tft.print("Humidity    (%): ");
   tft.setTextColor(ST7735_RED);
-//////  tft.println((float)DHT22.humidity,1);
+//////  tft.println((float)DHT22.humidity,1);     //EDIT TEMP DISPLAY DATA HERE
   tft.setTextColor(ST7735_YELLOW);
   tft.print("Temperature (F): ");
   tft.setTextColor(ST7735_GREEN);
-//// // tft.println(DHT22.fahrenheit(), 1);
+//// // tft.println(DHT22.fahrenheit(), 1);  //EDIT TEMP DISPLAY DATA HERE
   tft.setTextColor(ST7735_YELLOW);
   tft.print("Temperature (K): ");
 // tft.print(" ");
@@ -90,11 +90,11 @@ tft.setCursor(0,0);
   tft.setTextColor(ST7735_WHITE);
   tft.print("Dew Point   (C): ");
   tft.setTextColor(ST7735_RED);
-/////  tft.println(DHT22.dewPoint(), 1);
+/////  tft.println(DHT22.dewPoint(), 1);     //EDIT TEMP DISPLAY DATA HERE
   tft.setTextColor(ST7735_WHITE);
   tft.print("DewPointFast(C): ");
   tft.setTextColor(ST7735_RED);
-/////  tft.println(DHT22.dewPointFast(), 1);
+/////  tft.println(DHT22.dewPointFast(), 1);    //EDIT TEMP DISPLAY DATA HERE
   tft.drawLine(0, 220, tft.width()-1, 220, ST7735_WHITE);
   tft.setCursor(0,225);
   tft.print("Light intensity ");
