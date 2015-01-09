@@ -1,4 +1,3 @@
-
 #define sclk 4
 #define mosi 5
 #define cs   6
