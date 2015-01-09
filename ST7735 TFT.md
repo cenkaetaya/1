@@ -52,6 +52,11 @@ tftPrintTest();
   tft.fillScreen(ST7735_BLACK);
 }
 void loop() {
+   float h = dht.readHumidity();
+  float t = dht.readTemperature();
+   float f = dht.readTemperature(true);
+   
+   
 // tft.invertDisplay(true);
 // delay(500);
 //  tft.invertDisplay(false);
@@ -70,41 +75,36 @@ tft.setCursor(0,0);
   tft.setCursor(0, 60);
   tft.drawLine(0, 50, tft.width()-1, 50, ST7735_WHITE); //draw line separator
   tft.setTextColor(ST7735_YELLOW);
-  tft.print("Temperature (C): ");
-  tft.setTextColor(ST7735_GREEN);
- ////// tft.println((float)DHT22.temperature,1);      //EDIT TEMP DISPLAY DATA HERE
-  tft.setTextColor(ST7735_WHITE);
-  tft.print("Humidity    (%): ");
+  tft.print("Temp (C): ");
   tft.setTextColor(ST7735_RED);
-//////  tft.println((float)DHT22.humidity,1);     //EDIT TEMP DISPLAY DATA HERE
+tft.println(t);
   tft.setTextColor(ST7735_YELLOW);
-  tft.print("Temperature (F): ");
-  tft.setTextColor(ST7735_GREEN);
-//// // tft.println(DHT22.fahrenheit(), 1);  //EDIT TEMP DISPLAY DATA HERE
+  tft.print("Humidity: ");
+  tft.setTextColor(ST7735_BLUE);
+ tft.println(h);//////
   tft.setTextColor(ST7735_YELLOW);
-  tft.print("Temperature (K): ");
-// tft.print(" ");
-  tft.setTextColor(ST7735_GREEN);
- ///// tft.println(DHT22.kelvin(), 1);
-
-  tft.setTextColor(ST7735_WHITE);
-  tft.print("Dew Point   (C): ");
+  tft.print("Temp (F): ");
   tft.setTextColor(ST7735_RED);
-/////  tft.println(DHT22.dewPoint(), 1);     //EDIT TEMP DISPLAY DATA HERE
-  tft.setTextColor(ST7735_WHITE);
-  tft.print("DewPointFast(C): ");
-  tft.setTextColor(ST7735_RED);
-/////  tft.println(DHT22.dewPointFast(), 1);    //EDIT TEMP DISPLAY DATA HERE
-  tft.drawLine(0, 220, tft.width()-1, 220, ST7735_WHITE);
-  tft.setCursor(0,225);
-  tft.print("Light intensity ");
+tft.println(f);
+ 
+///////  tft.println(DHT22.dewPointFast(), 1);
+ tft.drawLine(0, 220, tft.width()-1, 220, ST7735_WHITE);
+ tft.setCursor(0,225);
+ tft.print("Light intensity ");
 int val = analogRead(ANALOG_IN);
-  tft.setCursor(60, 130);
-   tft.setTextColor(ST7735_YELLOW);
+ tft.setCursor(60, 130);
+  tft.setTextColor(ST7735_YELLOW);
   tft.println(val, 1);
   delay(2000);
   tft.fillScreen(ST7735_BLACK);
- 
+   Serial.print("Humidity: "); 
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("Temperature: "); 
+  Serial.print(t);
+  Serial.print(" *C ");
+  Serial.print(f);
+  Serial.print(" *F\t");
 }
 void tftPrintTest() {
   tft.setTextWrap(false);
@@ -123,6 +123,7 @@ void tftPrintTest() {
   //tft.setTextSize(3);
   //tft.print(3598865);
   delay(500);
+  
   }
  
 void testfastlines(uint16_t color1, uint16_t color2) {
@@ -140,4 +141,6 @@ void testdrawrects(uint16_t color) {
   for (int16_t x=0; x < tft.width(); x+=6) {
     tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color);
   }
+  
+  
 }
