@@ -1,0 +1,301 @@
+#define MAGENTA //Define a color for screen 
+#define sclk 4
+#define mosi 5
+#define cs   6
+#define dc   7
+#define rst  8  // you can also connect this to the Arduino reset
+#define ANALOG_IN 0 // for cds light sensor
+
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <SPI.h>
+#include <DHT.h> // DHT library
+
+//SDCARD START
+#include <SD.h>
+File myFile;
+//SDCARD END
+
+//DHT22 Sensor #1 start
+#define DHTPIN 2 
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+//DHT22 Sensor #1 end
+
+//DHT22 Sensor #2 start
+#define DHT2PIN 3 
+#define DHTTYPE2 DHT22 
+DHT dht2(DHT2PIN, DHTTYPE2);
+//DHT22 Sensor #2 end
+
+
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, mosi, sclk, rst); //define screen and pins
+
+int powerswitch1 = 13; //relay
+
+
+void setup(void) {
+ // DHT22.attach(2); // set digital port 2 to sense dht input
+  Serial.begin(9600);
+Serial.print("Setup Begins...");
+  pinMode(powerswitch1, OUTPUT);   //relay output
+  tft.initR(INITR_BLACKTAB);   // initialize a ST7735S chip, black tab
+
+Serial.println("initialize display");
+  //tft.setRotation(tft.getRotation()+1); //uncomment to rotate display
+
+// get time to display "sensor up time"
+  uint16_t time = millis();
+ // tft.fillScreen(ST7735_BLACK); //black screen
+  time = millis() - time;
+
+Serial.println(time, DEC);
+ 
+
+
+//Serial.println("done");
+//  delay(1000);
+
+
+tftPrintTest();
+//ALL THIS STUFF IS SCREEN TEST START
+// delay(500);
+ // tft.fillScreen(ST7735_BLACK);
+// Splash screen for esthetic purposes only
+  // optimized lines
+ // testfastlines(ST7735_RED, ST7735_BLUE);
+ // delay(500);
+
+ // testdrawrects(ST7735_GREEN);
+ // delay(500);
+ // tft.fillScreen(ST7735_BLACK);
+ //ALL THIS STUFF IS SCREEN TEST END
+}
+void loop() {
+//sensor 1 start
+Serial.println("read DHT22 #1");
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  float f = dht.readTemperature(true);
+//sensor 1 end
+   
+//sensor 2 start
+Serial.println("read DHT22 #2");
+  float h2 = dht2.readHumidity();
+  float t2 = dht2.readTemperature();
+  float f2 = dht2.readTemperature(true);
+//sensor 2 end
+   
+//temp average begin
+Serial.println("average calculation");
+  float havg = (h + h2)/ 2;
+  float favg = (f + f2)/ 2; 
+  float tavg = (t + t2)/ 2; 
+//temp average end
+//SD CARD START 
+   myFile = SD.open("test.txt", FILE_WRITE);
+  
+  // if the file opened okay, write to it:
+  if (myFile) {
+    Serial.print("Writing to test.txt...");
+    
+    myFile.println("Time, F, H, T ");
+    myFile.println(millis() / 1000);//print time, t, f and h
+    myFile.println(t);
+    myFile.println(f);
+    myFile.println(h);
+    //myFIle.println(myString); 
+    //myFile.println(millis() / 1000);
+    //close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    //if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+ //SD CARD END   
+   
+  char* myString = {"hello"};
+  
+  
+   if (h < 36) //top threshold
+  {
+   if (h < 33) //bottom threshhold
+     { 
+    digitalWrite(powerswitch1, HIGH); // Turn the Powertail on
+Serial.println("Switch ON");
+      
+      myString = "ON";
+    }
+    
+  }
+    else
+    {
+    digitalWrite(powerswitch1, LOW);    // turn the Powertail off
+Serial.println("Switch OFF");
+      myString = "OFF";
+    }
+  
+  
+// tft.invertDisplay(true);
+// delay(500);
+//  tft.invertDisplay(false);
+
+Serial.println("Begin screen data display");
+ //tft.setTextColor(ST7735_WHITE);
+ //tft.setCursor(0,0);
+ //tft.println("Sketch has been");
+ //tft.println("running for: ");
+  tft.setCursor(50, 5);
+  tft.setTextSize(2);
+  tft.setTextColor(ST7735_BLUE);
+  tft.print(millis() / 1000);
+  tft.setTextSize(1);
+  
+  tft.setTextColor(ST7735_WHITE);
+  tft.setCursor(33, 20);  //TEXT SPACING
+  tft.println("time online");
+  //tft.setCursor(0, 40);
+  
+  ///// ( x / y ) ( left right / up down )
+  
+  //BACKGROUND GRIDS START
+  tft.drawLine(1, 30, tft.width()-1, 30, ST7735_WHITE); //draw line separator
+  //drawn line over
+  //   tft.setCursor(0, 40);//VERTICAL LINE
+  tft.drawLine(82, 30, tft.width()-46, 157, ST7735_WHITE); //VERTICAL LINE
+  
+   //  tft.setCursor(0, 40);//VERTICAL LINE
+  tft.drawLine(1, 30, tft.width()-127, 157, ST7735_WHITE); //VERTICAL LINE
+     
+   //  tft.setCursor(0, 40);//VERTICAL LINE
+  tft.drawLine(127, 30, tft.width()-1, 157, ST7735_WHITE); //VERTICAL LINE
+  
+  
+  //BACKGROUND GRIDS END
+  
+  tft.setCursor(0, 37);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp  (C)     ");
+  tft.setTextColor(ST7735_RED);
+  tft.println(t);
+//tft.setCursor(0, 50);//test
+//tft.drawLine(0, 35, tft.width()-1, 35, ST7735_WHITE); //test
+//tft.drawLine(0, 70, tft.width()-1, 70, ST7735_WHITE);
+//tft.setCursor(0, 75);
+  tft.setCursor(0, 49);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Humid 1 %     ");
+  tft.setTextColor(ST7735_MAGENTA);
+  tft.println(h);//////
+  
+//tft.setCursor(0, 50); //test
+//tft.drawLine(0, 35, tft.width()-1, 35, ST7735_WHITE); //test
+  tft.setCursor(0, 61);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp (F)      ");
+  tft.setTextColor(ST7735_GREEN);
+  tft.println(f);
+  tft.setCursor(0, 73);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Status         ");
+  tft.setTextColor(ST7735_WHITE);
+  tft.println(myString);
+  tft.setCursor(0, 85);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp (C2)     ");
+  tft.setTextColor(ST7735_RED);
+  tft.println(t2);
+  tft.setCursor(0, 97);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Humid 2 %     ");
+  tft.setTextColor(ST7735_MAGENTA);
+  tft.println(h2);
+  tft.setCursor(0, 109);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp (F2)     ");
+  tft.setTextColor(ST7735_GREEN);
+  tft.println(f2);
+  tft.setCursor(0, 121);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Humid AVG     ");
+  tft.setTextColor(ST7735_MAGENTA);
+  tft.println(havg);
+  tft.setCursor(0, 133);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp AVG(F)   ");
+  tft.setTextColor(ST7735_GREEN);
+  tft.println(favg);  
+  tft.setCursor(0, 145);//TEXT SPACING
+  tft.setTextColor(ST7735_YELLOW);
+  tft.print(" Temp AVG(C)   ");
+  tft.setTextColor(ST7735_RED);
+  tft.println(tavg);  
+  tft.setCursor(0, 157); //test
+  tft.drawLine(1, 157, tft.width()-1, 157, ST7735_WHITE); //test
+
+
+//Sample of 1 line of text START
+//  tft.setCursor(0, 133);//TEXT SPACING
+//  tft.setTextColor(ST7735_YELLOW);
+//  tft.print(" Temp AVG(F): ");
+//  tft.setTextColor(ST7735_MAGENTA);
+//  tft.println(favg);  
+//  tft.setCursor(0, 156); //test
+//Sample of 1 line of text END 
+Serial.println("End screen data display");
+
+///////  tft.println(DHT22.dewPointFast(), 1);
+// tft.drawLine(0, 220, tft.width()-1, 220, ST7735_WHITE);
+// tft.setCursor(0,225);
+// tft.print("Light intensity ");
+//Serial.println("Light intensity Begin");
+//int val = analogRead(ANALOG_IN);
+//tft.setCursor(60, 140);
+//  tft.setTextColor(ST7735_YELLOW);
+//  tft.println(val, 1);
+//Serial.println("Light intensity End");
+  delay(5000); //how fast the display data refreshes.
+  tft.fillScreen(ST7735_BLACK); //turn screen black at end
+  
+
+}
+void tftPrintTest() {
+  tft.setTextWrap(false);
+  tft.fillScreen(ST7735_BLACK);
+  tft.setCursor(0, 60);
+  tft.setTextColor(ST7735_RED);
+  tft.setTextSize(2);
+  tft.println("temperature");
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(2);
+  tft.println("humidity");
+  tft.setTextColor(ST7735_GREEN);
+  tft.setTextSize(2);
+  tft.println("monitor");
+  tft.setTextColor(ST7735_BLUE);
+  //tft.setTextSize(3);
+  //tft.print(3598865);
+  delay(500);
+  tft.fillScreen(ST7735_BLACK);
+  }
+ 
+void testfastlines(uint16_t color1, uint16_t color2) {
+  tft.fillScreen(ST7735_BLACK);
+  for (int16_t y=0; y < tft.height(); y+=5) {
+    tft.drawFastHLine(0, y, tft.width(), color1);
+  }
+  for (int16_t x=0; x < tft.width(); x+=5) {
+    tft.drawFastVLine(x, 0, tft.height(), color2);
+  }
+}
+
+void testdrawrects(uint16_t color) {
+  tft.fillScreen(ST7735_BLACK);
+  for (int16_t x=0; x < tft.width(); x+=6) {
+    tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color);
+  }
+  
+  
+}
+
