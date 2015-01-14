@@ -53,30 +53,9 @@ Serial.println(time, DEC);
  
 tft.fillScreen(ST7735_BLACK);
 
-//Serial.println("done");
-//  delay(1000);
-
-//INTRO LOGO
 //tftPrintTest();
-//INTRO LOGO END
 
-//ALL THIS STUFF IS SCREEN TEST START
-// delay(500);
- // tft.fillScreen(ST7735_BLACK);
-// Splash screen for esthetic purposes only
-  // optimized lines
- // testfastlines(ST7735_RED, ST7735_BLUE);
- // delay(500);
-
- // testdrawrects(ST7735_GREEN);
- // delay(500);
- // tft.fillScreen(ST7735_BLACK);
- //ALL THIS STUFF IS SCREEN TEST END
  
- 
- 
- 
- ///////////////////SDCARD TEST BEGIN
   Serial.print("Initializing SD card...");
   // On the Ethernet Shield, CS is pin 4. It's set as an output by default.
   // Note that even if it's not used as the CS pin, the hardware SS pin 
@@ -89,40 +68,6 @@ tft.fillScreen(ST7735_BLACK);
     return;
   }
   Serial.println("initialization done.");
-  
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
-//  myFile = SD.open("test.txt", FILE_WRITE);
-//  
-//  // if the file opened okay, write to it:
-//  if (myFile) {
-//    Serial.print("Writing to test.txt...");
-//    myFile.println("testing 1, 2, 3.");
-//    // close the file:
-//    myFile.close();
-//    Serial.println("done.");
-//  } else {
-//    // if the file didn't open, print an error:
-//    Serial.println("error opening test.txt");
-//  }
-  
-  // re-open the file for reading:
-//  myFile = SD.open("test.txt");
-//  if (myFile) {
-//    Serial.println("test.txt:");
-//    
-//    // read from the file until there's nothing else in it:
-//    while (myFile.available()) {
-//        Serial.write(myFile.read());
-//    }
-//    // close the file:
-//    myFile.close();
-//  } else {
-//    // if the file didn't open, print an error:
-//    Serial.println("error opening test.txt");
-//  }
- 
- ///////////////////SDCARD TEST END
  
    //BACKGROUND GRIDS START
   tft.drawLine(1, 30, tft.width()-1, 30, ST7735_WHITE); //draw line separator
@@ -140,22 +85,16 @@ tft.fillScreen(ST7735_BLACK);
    
    
 //   tft.background(0,0,0);
-
   // set the stroke color to white
 //  tft.strokeRect(255,255,255);
-
   // set the fill color to grey
  // tft.drawCircle(32,31,30,BLACK);
 // tft.fillRect(92,40,16,16, WHITE);
-
-
 //tft.fillRect(45,0,70,20, ST7735_BLACK);
 //tft.drawRect(45,0,70,20, ST7735_BLACK);
 //(left , right      )(   how wide is box  /how tall is box      )
 //tft.fillRect(86,35,40,120, ST7735_BLACK);
 //tft.drawRect(86,35,40,120, ST7735_BLACK);
-
-
 //tft.fillRect(0,0,64,61, ST7735_MAGENTA);
 //   tft.drawRect(0,0,64,61, ST7735_MAGENTA);
   // tft.drawRect(30, 60, tft.width()-120, 60, ST7735_WHITE); //Draw rectangle
@@ -201,9 +140,6 @@ Serial.println("average calculation");
     myFile.println(t);
     myFile.println(f);
     myFile.println(h);
-    //myFIle.println(myString); 
-    //myFile.println(millis() / 1000);
-    //close the file:
     myFile.close();
     Serial.println("done.");
   } else {
@@ -236,18 +172,10 @@ Serial.println("Switch OFF");
       myString = "OFF";
     }
   
-
- 
-  
 // tft.invertDisplay(true);
-// delay(500);
 //  tft.invertDisplay(false);
 
 Serial.println("Begin screen data display");
- //tft.setTextColor(ST7735_WHITE);
- //tft.setCursor(0,0);
- //tft.println("Sketch has been");
- //tft.println("running for: ");
   tft.setCursor(50, 5);
   tft.setTextSize(2);
   tft.setTextColor(ST7735_BLUE);
@@ -255,33 +183,19 @@ Serial.println("Begin screen data display");
   int numbers = (millis() / 1000);
   Serial.println(numbers);
   tft.setTextSize(1);
-  
   tft.setTextColor(ST7735_WHITE);
   tft.setCursor(33, 20);  //TEXT SPACING
   tft.println("time online");
-  //tft.setCursor(0, 40);
-  
-  ///// ( x / y ) ( left right / up down )
-  
-
-  
   tft.setCursor(0, 37);//TEXT SPACING
   tft.setTextColor(ST7735_YELLOW);
   tft.print(" Temp  (C)     ");
   tft.setTextColor(ST7735_RED);
   tft.println(t);
-//tft.setCursor(0, 50);//test
-//tft.drawLine(0, 35, tft.width()-1, 35, ST7735_WHITE); //test
-//tft.drawLine(0, 70, tft.width()-1, 70, ST7735_WHITE);
-//tft.setCursor(0, 75);
   tft.setCursor(0, 49);//TEXT SPACING
   tft.setTextColor(ST7735_YELLOW);
   tft.print(" Humid 1 %     ");
   tft.setTextColor(ST7735_MAGENTA);
-  tft.println(h);//////
-  
-//tft.setCursor(0, 50); //test
-//tft.drawLine(0, 35, tft.width()-1, 35, ST7735_WHITE); //test
+  tft.println(h);
   tft.setCursor(0, 61);//TEXT SPACING
   tft.setTextColor(ST7735_YELLOW);
   tft.print(" Temp (F)      ");
@@ -322,33 +236,11 @@ Serial.println("Begin screen data display");
   tft.print(" Temp AVG(C)   ");
   tft.setTextColor(ST7735_RED);
   tft.println(tavg);  
-  tft.setCursor(0, 157); //test
- // tft.drawLine(1, 157, tft.width()-1, 157, ST7735_WHITE); //test
 
 
-//Sample of 1 line of text START
-//  tft.setCursor(0, 133);//TEXT SPACING
-//  tft.setTextColor(ST7735_YELLOW);
-//  tft.print(" Temp AVG(F): ");
-//  tft.setTextColor(ST7735_MAGENTA);
-//  tft.println(favg);  
-//  tft.setCursor(0, 156); //test
-//Sample of 1 line of text END 
 Serial.println("End screen data display");
 
-///////  tft.println(DHT22.dewPointFast(), 1);
-// tft.drawLine(0, 220, tft.width()-1, 220, ST7735_WHITE);
-// tft.setCursor(0,225);
-// tft.print("Light intensity ");
-//Serial.println("Light intensity Begin");
-//int val = analogRead(ANALOG_IN);
-//tft.setCursor(60, 140);
-//  tft.setTextColor(ST7735_YELLOW);
-//  tft.println(val, 1);
-//Serial.println("Light intensity End");
-  delay(5000); //how fast the display data refreshes.
-//tft.fillScreen(ST7735_BLACK); //turn screen black at end
-  
+  delay(5000); //display refresh speed
   
 
   
@@ -397,4 +289,5 @@ void testdrawrects(uint16_t color) {
   
   
 }
+
 
