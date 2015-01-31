@@ -1,3 +1,6 @@
+//GO HERE TO VIEW WEB PAGE RESULT SCREENSHOT
+//http://i.imgur.com/UQMJywy.jpg
+
 //Define Start
 #define NOTE_D2  73 //sound note for beep
 #define DHTPIN 2 
