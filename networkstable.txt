@@ -1,0 +1,448 @@
+//Define Start
+#define NOTE_D2  73 //sound note for beep
+#define DHTPIN 2 
+#define DHTTYPE DHT22
+#define DHT2PIN 3 
+#define DHTTYPE2 DHT22 
+#define MAGENTA //Define a color for screen 
+#define sclk 8 //screen pin
+#define mosi 5 //screen pin
+#define cs   6 //screen pin
+#define dc   7 //screen pin
+#define rst  rstpin  // you can also connect this to the Arduino reset
+#define ANALOG_IN 0 // for cds light sensor
+
+//Define End
+//Include start
+#include <DHT.h>//dht sensor library
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <SPI.h>//needed to run screen
+#include <Wire.h>
+#include "RTClib.h"
+#include <Ethernet.h>
+//Include end
+//declare start
+DHT dht2(DHT2PIN, DHTTYPE2);
+DHT dht(DHTPIN, DHTTYPE);
+int powerswitch1 = A0;
+int powerswitch2 = A1;
+const int ledPin =  A2;
+const int ledPin2 =  A3;
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, mosi, sclk);
+char* myString = { "OFF" };//relay1 on / off status
+char* myString2 = { "OFF" };//relay2 on / off status
+const int chipSelect = 4;
+RTC_DS1307 RTC;
+byte mac[] = {
+  0x90, 0xA2, 0xDA, 0x00, 0x23, 0x36 }; //MAC address found on the back of your ethernet shield.
+IPAddress ip(192,168,1,40);
+//decalare end
+EthernetServer server(80);
+
+
+void setup() {
+pinMode(ledPin, OUTPUT); 
+pinMode(ledPin2, OUTPUT);
+tft.initR(INITR_BLACKTAB);   // initialize a ST7735S chip, black tab
+tft.fillScreen(ST7735_RED);//make screen red
+  pinMode(powerswitch1, OUTPUT);
+  pinMode(powerswitch2, OUTPUT);
+  Serial.begin(9600);
+  Wire.begin();
+  RTC.begin();
+if (! RTC.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+ //   RTC.adjust(DateTime(__DATE__, __TIME__));
+  }
+
+// get time to display "sensor up time"
+  uint16_t time = millis();
+ // tft.fillScreen(ST7735_BLACK); //black screen
+  time = millis() - time;
+
+Serial.println(time, DEC);
+
+  Ethernet.begin(mac, ip);
+  server.begin();
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
+}
+void loop(){
+  //Tone Start  
+	tone(9, NOTE_D2);
+	delay(65);
+	noTone(9);
+//Tone End  
+
+//clock start
+  DateTime now = RTC.now();
+ 
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(' ');
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+    
+ //hour conversion to 12 hour start
+   int x;
+   int timeresult;
+   x = (now.hour());
+   if (x > 12) {
+   timeresult = x - 12;
+   }
+   else 
+   {
+    timeresult = x;
+   }
+   Serial.println(timeresult);
+    //hour conversion to 24 hour start
+//clock end
+//sensor 1 start
+	//Serial.println("read DHT22 #1");
+	float h = dht.readHumidity();
+	float t = dht.readTemperature();
+	float f = dht.readTemperature(true);
+	//sensor 1 end
+	//sensor 2 start
+	//Serial.println("read DHT22 #2");
+	float h2 = dht2.readHumidity();
+	float t2 = dht2.readTemperature();
+	float f2 = dht2.readTemperature(true);
+	//sensor 2 end
+	//temp average begin
+	//Serial.println("average calculation");
+	float havg = (h + h2) / 2;
+	float favg = (f + f2) / 2;
+	float tavg = (t + t2) / 2;
+	//temp average end
+
+//Relay 1 Start
+	if (h < 42) //top threshold
+	{
+		if (h < 39) //bottom threshhold
+		{
+			digitalWrite(powerswitch1, HIGH);
+			// Turn the Powertail on
+			Serial.println("Switch ON");
+digitalWrite(ledPin, HIGH);
+			myString = "ON";
+		}
+
+	}
+	else
+	{
+                myString = "OFF";
+		digitalWrite(powerswitch1, LOW);    // turn the Powertail off
+digitalWrite(ledPin, LOW);
+		Serial.println("Switch OFF");
+		
+	}
+//Relay 1 End
+//Relay 2 Start
+	if (f < 60) //top threshold
+	{
+		if (h < 60) //bottom threshhold
+		{
+			digitalWrite(powerswitch2, HIGH);
+			// Turn the Powertail on
+			Serial.println("Switch ON");
+digitalWrite(ledPin2, HIGH);
+			myString2 = "ON";
+		}
+
+	}
+	else
+	{
+                myString2 = "OFF";
+		digitalWrite(powerswitch2, LOW);    // turn the Powertail off
+digitalWrite(ledPin2, LOW);
+		Serial.println("Switch OFF");
+		
+	}
+//Relay 2 End
+//Screen start
+
+delay(500);
+
+tft.fillRect(20,19,80,140, ST7735_RED);//clear text
+//(left wall,top wall px from top,right wall,bottom wall px from top)
+tft.drawRect(20,19,80,140, ST7735_RED);//cleartext
+//active text
+tft.setCursor(35, 20);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(f);
+tft.setCursor(35, 40);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(t);
+tft.setCursor(35, 60);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(h);
+tft.setCursor(25, 120);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(timeresult);
+tft.setCursor(50, 120);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(now.minute(), DEC);
+tft.setCursor(75, 120);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(now.second(), DEC);
+
+//static text
+
+tft.setCursor(105, 20);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("F");
+tft.setCursor(105, 40);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("C");
+tft.setCursor(105, 60);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("%");
+tft.setCursor(52, 80);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(myString);
+tft.setCursor(105, 80);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("H");
+tft.setCursor(52, 100);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(myString2);
+tft.setCursor(105, 100);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("T");
+tft.setCursor(40, 140);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println(millis() / 1000);
+tft.setCursor(105, 140);
+tft.setTextSize(2);
+tft.setTextColor(ST7735_WHITE);
+tft.println("-");
+
+
+
+
+
+
+tft.print(millis() / 1000);
+//Screen end
+
+
+
+
+ EthernetClient client = server.available();
+  if (client) {
+    Serial.println("new client");
+    // an http request ends with a blank line
+    boolean currentLineIsBlank = true;
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        Serial.write(c);
+        // if you've gotten to the end of the line (received a newline
+        // character) and the line is blank, the http request has ended,
+        // so you can send a reply
+        if (c == '\n' && currentLineIsBlank) {
+          // send a standard http response header
+          client.println("HTTP/1.1 200 OK");
+          client.println("Content-Type: text/html");
+          client.println("Connection: close");  // the connection will be closed after completion of the response
+   client.println("Refresh: 5");  // refresh the page automatically every 5 sec
+          client.println();
+          client.println("<!DOCTYPE HTML>");
+          client.println("<html>");
+          client.println("<body>");
+          /////CSS
+            client.println("<style>");
+            client.println("#left {");
+            client.println("float:left;");
+            client.println("}");
+            client.println("text1 {");
+            client.println("color: #07BBF2;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            client.println("text2 {");
+            client.println("color: #FC5400;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            client.println("text3 {");
+            client.println("color: #02BA3C;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            client.println("text4 {");
+            client.println("color: #EBF700;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            client.println("text5 {");
+            client.println("color: #F7C600;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            client.println("text6 {");
+            client.println("color: #000000;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            if (myString == "ON") {
+            client.println("humidifier {");
+            client.println("color: #02F04E;");
+            client.println("font-size: 100%;");
+            client.println("}");
+            }
+            else {
+              client.println("humidifier {");
+            client.println("color: #FC5400;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            }
+            if (myString2 == "ON") {
+            client.println("heater {");
+            client.println("color: #02F04E;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            }
+            else {
+             client.println("heater {");
+            client.println("color: #FC5400;");
+            client.println("font-size: 200%;");
+            client.println("}");
+            }
+            
+             client.println("#right {");
+            client.println("float:right;");
+            //client.println("color:red;");
+            client.println("}");
+            // client.println("#header {");
+           // client.println("background-color:black;");
+           // client.println("}");
+         
+            
+            
+            client.println("#content {");
+            client.println("background-color:grey;");
+            client.println("width:500px;");
+            client.println("height:500px;");
+            client.println("}");
+            client.println("</style>");
+          ///CSS
+          
+          client.println("<div id = content>");
+          client.println("<body bgcolor=""#000000::>"); //how to change color adruino version
+        
+            client.println("<div id = left>");
+            client.println("<text4>");
+            client.print("Sensor 1");
+            client.println("</text4>");
+            client.println("<p />");
+            client.println("<text1>");
+            client.print(h);
+            client.print(" %\t");
+            client.println("</text1>");
+            client.println("<p />"); 
+            client.println("<text2>");
+            client.print(f);
+            client.println(" &#176;");
+            client.println("F");
+            client.println("</text2>");
+            client.println("<p />");
+            client.println("<text2>");
+            client.print(t);
+            client.println(" &#176;");
+            client.println("C");
+            client.println("</text2>");
+            client.println("<p />");
+            client.println("</div>");
+            client.println("<div id = right>");
+            client.println("<text4>");
+            client.print("Sensor 2");
+            client.println("</text4>");
+            client.println("<p />");
+            client.println("<text1>");
+            client.print(h2);
+            client.print(" %\t");
+            client.println("</text1>");
+            client.println("<p />"); 
+            client.println("<text2>");
+            client.print(f2);
+            client.println(" &#176;");
+            client.println("F");
+            client.println("</text2>");
+            client.println("<p />");
+            client.println("<text2>");
+            client.print(t);
+            client.println(" &#176;");
+            client.println("C");
+            client.println("</text2>");
+            client.println("<p />");
+            client.println("</div>");
+            client.println("<div align=center>");
+            client.println("<text5>");
+            client.print("Humidifier: ");
+            client.println("</text5>");
+            client.println("<humidifier>");
+            client.print(myString);
+            client.println("</humidifier>");
+            client.println("<text5>");
+            client.print("Heater: ");
+            client.println("</text5>");
+            client.println("<heater>");
+            client.print(myString2);
+            client.println("</heater>");
+            client.println("<text6>");
+            client.println("<p />");
+            client.print(millis() / 1000);
+            client.println("</text6>");
+            client.println("<text6>");
+            client.print(timeresult);
+            client.print(":");
+            client.print(now.minute(), DEC);
+            client.print(":");
+            client.print(now.second(), DEC);
+            client.println("</text6>");
+             client.println("</div>"); 
+              client.println("</div>");
+          client.println("</body>");
+          client.println("</html>");
+          break;
+        }
+        if (c == '\n') {
+          // you're starting a new line
+          currentLineIsBlank = true;
+        }
+        else if (c != '\r') {
+          // you've gotten a character on the current line
+          currentLineIsBlank = false;
+        }
+      }
+    }
+    // give the web browser time to receive the data
+    delay(1);
+    // close the connection:
+    client.stop();
+    Serial.println("client disonnected");
+  }
+  
+  
+delay(3000);
+
+}
