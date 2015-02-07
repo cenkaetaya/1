@@ -1,0 +1,289 @@
+//Define Start
+#define NOTE_D2  73 //sound note for beep
+#define DHTPIN 2 
+#define DHTTYPE DHT22
+#define DHT2PIN 3 
+#define DHTTYPE2 DHT22 
+#define MAGENTA //Define a color for screen 
+#define sclk 8 //screen pin
+#define mosi 5 //screen pin
+#define cs   6 //screen pin
+#define dc   7 //screen pin
+#define rst  rstpin  // you can also connect this to the Arduino reset
+#define ANALOG_IN 0 // for cds light sensor
+
+//Define End
+//Include start
+#include <DHT.h>//dht sensor library
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <SPI.h>//needed to run screen
+#include <Wire.h>
+#include "RTClib.h"
+#include <Ethernet.h>
+//Include end
+//declare start
+DHT dht2(DHT2PIN, DHTTYPE2);
+DHT dht(DHTPIN, DHTTYPE);
+int powerswitch1 = A0;
+int powerswitch2 = A1;
+int powerswitch1status = 2; //dictates on/off, if value changed to 10 = 0n, 5 = off, 2 default
+int powerswitch2status = 2; //dictates on/off, if value changed to 10 = 0n, 5 = off, 2 default
+const int ledPin =  A2;
+const int ledPin2 =  A3;
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, mosi, sclk);
+char* myString = { "OFF" };//relay1 on / off status
+char* myString2 = { "OFF" };//relay2 on / off status
+const int chipSelect = 4;
+RTC_DS1307 RTC;
+byte mac[] = {
+  0x90, 0xA2, ARDUINO MAC ADDRESS0x36 }; //MAC address found on the back of your ethernet shield.
+IPAddress ip(192,168,1,40); //ARDUIN IP
+//decalare end
+byte server2[] = { 192, 168, 1, 51 }; //SERVER IP
+EthernetClient client;
+
+void setup() {
+pinMode(ledPin, OUTPUT); 
+pinMode(ledPin2, OUTPUT);
+tft.initR(INITR_BLACKTAB);   // initialize a ST7735S chip, black tab
+tft.fillScreen(ST7735_BLACK);//make screen red
+  pinMode(powerswitch1, OUTPUT);
+  pinMode(powerswitch2, OUTPUT);
+  Serial.begin(9600);
+  Wire.begin();
+  RTC.begin();
+if (! RTC.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+ //   RTC.adjust(DateTime(__DATE__, __TIME__));
+  }
+
+// get time to display "sensor up time"
+  uint16_t time = millis();
+ // tft.fillScreen(ST7735_BLACK); //black screen
+  time = millis() - time;
+
+Serial.println(time, DEC);
+
+  Ethernet.begin(mac, ip);
+ 
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
+  
+  
+}
+void loop(){
+  //Tone Start  
+	tone(9, NOTE_D2);
+	delay(65);
+	noTone(9);
+//Tone End  
+
+//clock start
+  DateTime now = RTC.now();
+ 
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(' ');
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+    
+ //hour conversion to 12 hour start
+   int x;
+   int timeresult;
+   x = (now.hour());
+   if (x > 12) {
+   timeresult = x - 12;
+   }
+   else 
+   {
+    timeresult = x;
+   }
+   Serial.println(timeresult);
+    //hour conversion to 24 hour start
+//clock end
+//sensor 1 start
+	//Serial.println("read DHT22 #1");
+	float h = dht.readHumidity();
+	float t = dht.readTemperature();
+	float f = dht.readTemperature(true);
+	//sensor 1 end
+	//sensor 2 start
+	//Serial.println("read DHT22 #2");
+	float h2 = dht2.readHumidity();
+	float t2 = dht2.readTemperature();
+	float f2 = dht2.readTemperature(true);
+	//sensor 2 end
+	//temp average begin
+	//Serial.println("average calculation");
+	float havg = (h + h2) / 2;
+	float favg = (f + f2) / 2;
+	float tavg = (t + t2) / 2;
+	//temp average end
+
+//Relay 1 Start
+	if (h < 42) //top threshold
+	{
+		if (h < 39) //bottom threshhold
+		{
+			digitalWrite(powerswitch1, HIGH);
+			// Turn the Powertail on
+			Serial.println("Switch ON");
+digitalWrite(ledPin, HIGH);
+			myString = "ON";
+                       powerswitch1status = 10;
+		}
+
+	}
+	else
+	{
+                myString = "OFF";
+		digitalWrite(powerswitch1, LOW);    // turn the Powertail off
+digitalWrite(ledPin, LOW);
+		Serial.println("Switch OFF");
+		powerswitch1status = 5;
+	}
+//Relay 1 End
+//Relay 2 Start
+	if (f < 60) //top threshold
+	{
+		if (h < 60) //bottom threshhold
+		{
+			digitalWrite(powerswitch2, HIGH);
+			// Turn the Powertail on
+			Serial.println("Switch ON");
+digitalWrite(ledPin2, HIGH);
+			myString2 = "ON";
+powerswitch2status = 10;
+		}
+
+	}
+	else
+	{
+                myString2 = "OFF";
+		digitalWrite(powerswitch2, LOW);    // turn the Powertail off
+digitalWrite(ledPin2, LOW);
+		Serial.println("Switch OFF");
+		powerswitch2status = 5;
+	}
+
+//Relay 2 End
+
+//Screen start
+
+delay(500);
+tft.fillRect(29,4,100,160, ST7735_BLACK);//clear text
+//(left wall,top wall px from top,right wall, px from top)
+tft.drawRect(29,4,100,160, ST7735_BLACK);//cleartext
+
+tft.fillRect(00,150,120,160, ST7735_BLACK);//clear text
+//(left wall,top wall px from top,right wall,bottom wall px from top)
+tft.drawRect(00,150,120,160, ST7735_BLACK);//cleartext
+
+//active text
+
+tft.setCursor(30, 5);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_YELLOW);
+tft.println(favg);
+tft.setCursor(30, 35);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_YELLOW);
+tft.println(tavg);
+tft.setCursor(30, 65);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_MAGENTA);
+tft.println(havg);
+
+
+//static text
+
+tft.setCursor(5, 5);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_WHITE);
+tft.println("F");
+tft.setCursor(5, 35);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_WHITE);
+tft.println("C");
+tft.setCursor(5, 65);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_WHITE);
+tft.println("%");
+
+tft.setCursor(30, 95);
+tft.setTextSize(3);
+if (powerswitch1status == 5) 
+{
+tft.setTextColor(ST7735_RED);
+}
+else
+{
+  tft.setTextColor(ST7735_GREEN);
+}
+tft.println(myString);
+tft.setCursor(5, 95);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_WHITE);
+tft.println("H");
+tft.setCursor(30, 125);
+tft.setTextSize(3);
+if (powerswitch2status == 5) 
+{
+tft.setTextColor(ST7735_RED);
+}
+else
+{
+  tft.setTextColor(ST7735_GREEN);
+}
+tft.println(myString2);
+tft.setCursor(5, 125);
+tft.setTextSize(3);
+tft.setTextColor(ST7735_WHITE);
+tft.println("T");
+tft.setCursor(5, 150);
+tft.setTextSize(1);
+tft.setTextColor(ST7735_WHITE);
+tft.println(millis() / 1000);
+
+//Screen end
+
+
+if (client.connect(server2, 80)) {
+    Serial.println("connected");
+    client.print("GET /databasetest.php?a=");
+    client.print(h);
+    client.print("&b=");
+    client.print(t);
+     client.print("&c=");
+    client.print(f);
+     client.print("&d=");
+    client.print(h2);
+     client.print("&e=");
+    client.print(t2);
+    client.print("&f=");
+    client.print(f2);
+    client.print("&g=");
+    client.print(powerswitch1status);
+    client.print("&h=");
+    client.print(powerswitch2status);
+    client.println(" HTTP/1.0");
+    client.println();
+    client.stop();
+  } 
+  else {
+    Serial.println("connection failed");
+  }
+
+  
+delay(15000);
+
+}
