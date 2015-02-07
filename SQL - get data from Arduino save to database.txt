@@ -1,0 +1,40 @@
+phptext.php?a=350&b=450
+
+
+
+<?php
+$servername = "localhost";
+$username = "administrator";
+$password = "simon123";
+$dbname = "test";
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+} 
+
+
+print_r($_GET);
+if($_GET["a"] === "") echo "a is an empty string\n";
+if($_GET["a"] === false) echo "a is false\n";
+if($_GET["a"] === null) echo "a is null\n";
+if(isset($_GET["a"])) echo "a is set\n";
+if(!empty($_GET[a])) echo "a is not empty";
+
+
+
+$sql = "INSERT INTO test.sensor (h, t, f, h2, t2, f2, r1, r2) VALUES ('$_GET[a]','$_GET[b]','$_GET[c]','$_GET[d]','$_GET[e]','$_GET[f]','$_GET[g]','$_GET[h]')";
+
+if ($conn->query($sql) === TRUE) {
+    echo "New record created successfully";
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
+
+
+
+
+$conn->close();
+?>
+
