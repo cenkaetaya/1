@@ -1,0 +1,91 @@
+ <?php
+$con=mysql_connect("localhost","administrator","PASSWORD") or die("Failed to connect with database!!!!");
+mysql_select_db("test", $con); 
+// The Chart table contains two fields: weekly_task and percentage
+// This example will display a pie chart. If you need other charts such as a Bar chart, you will need to modify the code a little to make it work with bar chart and other charts
+$sth = mysql_query("SELECT id, h, t, f, h2, t2, f2, r1, r2 FROM sensor;");
+
+/*
+---------------------------
+example data: Table (Chart)
+--------------------------
+weekly_task     percentage
+Sleep           30
+Watching Movie  40
+work            44
+*/
+
+$rows = array();
+//flag is not needed
+$flag = true;
+$table = array();
+$table['cols'] = array(
+
+    // Labels for your chart, these represent the column titles
+    // Note that one column is in "string" format and another one is in "number" format as pie chart only required "numbers" for calculating percentage and string will be used for column title
+    array('label' => 'Time 10 second increments', 'type' => 'number'),
+    array('label' => 'Humidity', 'type' => 'number'),
+    array('label' => 'C', 'type' => 'number'),
+array('label' => 'F', 'type' => 'number'),
+
+array('label' => 'Heater', 'type' => 'number'),
+array('label' => 'Humidifier', 'type' => 'number')
+);
+
+$rows = array();
+while($r = mysql_fetch_assoc($sth)) {
+    $temp = array();
+    // the following line will be used to slice the Pie chart
+    $temp[] = array('v' => (int) $r['id']); 
+
+    // Values of each slice
+$temp[] = array('v' => (float) $r['h']);
+    $temp[] = array('v' => (float) $r['t']); 
+$temp[] = array('v' => (float) $r['f']);
+$temp[] = array('v' => (float) $r['r2']);
+$temp[] = array('v' => (float) $r['r1']);
+
+
+    $rows[] = array('c' => $temp);
+}
+
+$table['rows'] = $rows;
+$jsonTable = json_encode($table);
+//echo $jsonTable;
+?>
+
+ <html>
+  <head>
+    <script type="text/javascript"
+          src="https://www.google.com/jsapi?autoload={
+            'modules':[{
+              'name':'visualization',
+              'version':'1',
+              'packages':['corechart']
+            }]
+          }"></script>
+
+    <script type="text/javascript">
+      google.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+         var data = new google.visualization.DataTable(<?=$jsonTable?>);
+
+        var options = {
+          title: 'SQL database chart from Arduino.',
+		            curveType: 'function',
+          legend: { position: 'bottom' },
+		     width: 1400,
+          height: 1000
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="curve_chart" style="width: 900px; height: 500px"></div>
+  </body>
+</html>
