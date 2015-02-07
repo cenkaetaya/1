@@ -1,0 +1,43 @@
+#include <Ethernet.h>
+#include <SPI.h>
+
+
+byte mac[] = { 0x90, ARDUINO MAC ADDRESS0x23, 0x36 };
+byte ip[] = { 192, 168, 1, 40 }; // ARDUINO IP
+byte server[] = { 192, 168, 1, 51 }; // SERVER WITH SQL IP
+
+EthernetClient client;
+
+void setup()
+{
+  Ethernet.begin(mac, ip);
+  Serial.begin(9600);
+
+  delay(1000);
+
+  Serial.println("connecting...");
+
+  if (client.connect(server, 80)) {
+    Serial.println("connected");
+    client.println("GET /databasetest.php?a=147&b=27 HTTP/1.0");
+    client.println();
+  } else {
+    Serial.println("connection failed");
+  }
+}
+
+void loop()
+{
+  if (client.available()) {
+    char c = client.read();
+    Serial.print(c);
+  }
+
+  if (!client.connected()) {
+    Serial.println();
+    Serial.println("disconnecting.");
+    client.stop();
+    for(;;)
+      ;
+  }
+}
