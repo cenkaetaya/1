@@ -5,7 +5,7 @@ phptext.php?a=350&b=450
 <?php
 $servername = "localhost";
 $username = "administrator";
-$password = "simon123";
+$password = "PASSWORD";
 $dbname = "test";
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
