@@ -1,9 +1,10 @@
  <?php
-$con=mysql_connect("localhost","administrator","PASSWORD") or die("Failed to connect with database!!!!");
-mysql_select_db("test", $con); 
+include('./connect.php');
+$db = mysql_connect($db_host, $db_user, $db_password);
+mysql_select_db($db_database);
 // The Chart table contains two fields: weekly_task and percentage
 // This example will display a pie chart. If you need other charts such as a Bar chart, you will need to modify the code a little to make it work with bar chart and other charts
-$sth = mysql_query("SELECT id, h, t, f, h2, t2, f2, r1, r2 FROM sensor;");
+$sth = mysql_query("SELECT id, time, f, h, t FROM sensor WHERE ID%5 = 0");
 
 /*
 ---------------------------
@@ -15,77 +16,85 @@ Watching Movie  40
 work            44
 */
 
-$rows = array();
-//flag is not needed
-$flag = true;
-$table = array();
-$table['cols'] = array(
-
-    // Labels for your chart, these represent the column titles
-    // Note that one column is in "string" format and another one is in "number" format as pie chart only required "numbers" for calculating percentage and string will be used for column title
-    array('label' => 'Time 10 second increments', 'type' => 'number'),
-    array('label' => 'Humidity', 'type' => 'number'),
-    array('label' => 'C', 'type' => 'number'),
-array('label' => 'F', 'type' => 'number'),
-
-array('label' => 'Heater', 'type' => 'number'),
-array('label' => 'Humidifier', 'type' => 'number')
+$data = array (
+      'cols' => array( 
+        array('id' => 'time', 'label' => 'time', 'type' => 'datetime'), 
+        array('id' => 'f', 'label' => 'Temp F', 'type' => 'number'), 
+        array('id' => 'h', 'label' => 'Humidity', 'type' => 'number'),
+		array('id' => 't', 'label' => 'Temp C', 'type' => 'number')
+    ),
+    'rows' => array()
 );
 
 $rows = array();
-while($r = mysql_fetch_assoc($sth)) {
-    $temp = array();
-    // the following line will be used to slice the Pie chart
-    $temp[] = array('v' => (int) $r['id']); 
-
-    // Values of each slice
-$temp[] = array('v' => (float) $r['h']);
-    $temp[] = array('v' => (float) $r['t']); 
-$temp[] = array('v' => (float) $r['f']);
-$temp[] = array('v' => (float) $r['r2']);
-$temp[] = array('v' => (float) $r['r1']);
-
-
-    $rows[] = array('c' => $temp);
+while ($res = mysql_fetch_assoc($sth)) {
+    // assumes dates are patterned 'yyyy-MM-dd hh:mm:ss'
+    preg_match('/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/', $res['time'], $match);
+    $year = (int) $match[1];
+    $month = (int) $match[2] - 1; // convert to zero-index to match javascript's dates
+	$day = (int) $match[3];
+    $hours = (int) $match[4];
+    $minutes = (int) $match[5];
+    $seconds = (int) $match[6];
+    array_push($data['rows'], array('c' => array(
+       array('v' => 'Date(' . date('Y,n,d,H,i,s', strtotime($res['time'])).')'), 
+    array('v' => floatval($res['f'])), 
+    array('v' => floatval($res['h'])),
+	array('v' => floatval($res['t']))
+    )));
 }
-
-$table['rows'] = $rows;
-$jsonTable = json_encode($table);
 //echo $jsonTable;
+
+
+
+
 ?>
 
- <html>
+<html>
   <head>
-    <script type="text/javascript"
-          src="https://www.google.com/jsapi?autoload={
-            'modules':[{
-              'name':'visualization',
-              'version':'1',
-              'packages':['corechart']
-            }]
-          }"></script>
-
+  
+    <!--Load the Ajax API-->
+ <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
-      google.setOnLoadCallback(drawChart);
 
-      function drawChart() {
-         var data = new google.visualization.DataTable(<?=$jsonTable?>);
+    // Load the Visualization API and the piechart package.
+    google.load('visualization', '1.1', {'packages':['annotationchart']});;
 
-        var options = {
-          title: 'SQL database chart from Arduino.',
-		            curveType: 'function',
-          legend: { position: 'bottom' },
-		     width: 1400,
-          height: 1000
-        };
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.setOnLoadCallback(drawChart);
 
-        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+    function drawChart() {
 
-        chart.draw(data, options);
-      }
+      // Create our data table out of JSON data loaded from server.
+      var bar_chart_data = new google.visualization.DataTable(<?php echo json_encode($data); ?>);;
+	  
+      var options = {
+		'title':'Sensor 1 reading.',
+                           'width':800,
+                           'height':300,  legend: { position: 'bottom' },};
+		
+      // Instantiate and draw our chart, passing in some options.
+      // Do not forget to check your div ID
+      var chart = new google.visualization.AnnotationChart(document.getElementById('chart_div'));
+        chart.draw(bar_chart_data, options);
+		
+	
+			
+			
+    }
+	 
+	
     </script>
+ 
   </head>
+
   <body>
-    <div id="curve_chart" style="width: 900px; height: 500px"></div>
+  
+
+    <!--<script>setInterval(function(){location.reload();}, 80000)</script>-->
+    <div id="chart_div"></div>
+	<br />
+	
+	  
   </body>
 </html>
